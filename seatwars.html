@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SeatWars: Book My Mess</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f7f7;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .login-screen, .main-screen {
+      display: none;
+      padding-top: 100px;
+    }
+
+    .visible {
+      display: block;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+    }
+
+    .seats-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .seat-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 850px;
+    }
+
+    .seat {
+      background-color: #d3d3d3;
+      border: 1px solid #999;
+      margin: 6px;
+      padding: 12px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100px;
+      transition: 0.3s;
+    }
+
+    .seat:hover {
+      background-color: #ffc107;
+      transform: scale(1.1);
+    }
+
+    .vip-seat {
+      background-color: #ffd700;
+    }
+
+    #message-box {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+      min-height: 40px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login screen -->
+  <div id="login" class="login-screen visible">
+    <h2>Welcome to SeatWars</h2>
+    <p>Login to book your seat</p>
+    <input type="text" id="username" placeholder="Enter username" />
+    <br />
+    <button onclick="startBooking()">Login</button>
+  </div>
+
+  <!-- Main seat selection screen -->
+  <div id="main" class="main-screen">
+    <h2>Choose Your Seat (if you dare)</h2>
+
+    <div class="seats-section">
+      <h3>🎟️ General Seats</h3>
+      <div id="normal-seats" class="seat-grid"></div>
+
+      <h3>💎 VIP Seats</h3>
+      <div id="vip-seats" class="seat-grid"></div>
+    </div>
+
+    <div id="message-box"></div>
+  </div>
+
+  <script>
+    const normalSeatContainer = document.getElementById("normal-seats");
+    const vipSeatContainer = document.getElementById("vip-seats");
+    const messageBox = document.getElementById("message-box");
+
+    function startBooking() {
+      const username = document.getElementById("username").value.trim();
+      if (!username) {
+        alert("Please enter a username!");
+        return;
+      }
+      document.getElementById("login").classList.remove("visible");
+      document.getElementById("main").classList.add("visible");
+      loadSeats();
+    }
+
+    function loadSeats() {
+      // 40 General Seats
+      for (let i = 1; i <= 40; i++) {
+        const seat = createSeatButton(i);
+        normalSeatContainer.appendChild(seat);
+      }
+
+      // 16 VIP Seats
+      for (let i = 41; i <= 56; i++) {
+        const seat = createSeatButton(i, true);
+        vipSeatContainer.appendChild(seat);
+      }
+    }
+
+    function createSeatButton(num, isVip = false) {
+      const btn = document.createElement("button");
+      btn.innerText = isVip ? `VIP ${num}` : `Seat ${num}`;
+      btn.classList.add("seat");
+      if (isVip) btn.classList.add("vip-seat");
+      btn.onclick = () => handleSeatClick(num, isVip);
+      return btn;
+    }
+
+    const successMessages = [
+      "✅ Seat ${seatNum} booked successfully... maybe.",
+      "🎉 Congrats! Seat ${seatNum} is all yours (we think).",
+      "Nice pick! Seat ${seatNum} is tentatively yours.",
+      "Seat ${seatNum} added to your non-existent cart.",
+    ];
+
+    const conflictMessages = [
+      "⚔️ Clash on Seat ${seatNum}. Prepare for battle!",
+      "💥 Two humans. One seat. Let the chaos begin.",
+      "Oops! Seat ${seatNum} already clicked by someone else.",
+      "🤖 Duel detected. Flip a coin or cry softly.",
+    ];
+
+    const vipSuccessMessages = [
+      "👑 VIP ${seatNum} is *probably* yours. We salute you.",
+      "✨ Enjoy your golden cushion. VIP ${seatNum} locked in.",
+      "💼 VIP ${seatNum} booked. ₹99,999 will not be refunded.",
+    ];
+
+    const vipConflictMessages = [
+      "🔥 VIP ${seatNum} is too hot to handle. Starting mini-game...",
+      "👑 Conflict! Only true royalty gets VIP ${seatNum}.",
+      "🤡 VIP ${seatNum} in dispute. Prove you’re worthy.",
+    ];
+
+    function handleSeatClick(seatNum, isVip = false) {
+      const conflict = Math.random() < 0.5;
+      let msgArray;
+
+      if (isVip) {
+        msgArray = conflict ? vipConflictMessages : vipSuccessMessages;
+      } else {
+        msgArray = conflict ? conflictMessages : successMessages;
+      }
+
+      const msg = msgArray[Math.floor(Math.random() * msgArray.length)]
+                    .replace("${seatNum}", seatNum);
+      showPopup(msg);
+    }
+
+    function showPopup(message) {
+      messageBox.innerText = message;
+    }
+  </script>
+</body>
+</html>

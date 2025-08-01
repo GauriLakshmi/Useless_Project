@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Seat Booking System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+            background-size: 200% 200%;
+            animation: gradient-shift 8s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.15),
+                0 0 0 1px rgba(255,255,255,0.1) inset;
+            padding: 50px;
+            max-width: 1000px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .login-form {
+            display: block;
+        }
+
+        .seat-selection, .game-container {
+            display: none;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            font-size: 2.8em;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #667eea;
+            font-size: 1.3em;
+            font-weight: 500;
+            margin: 20px 0 30px 0;
+            opacity: 0.9;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 18px 24px;
+            border: 2px solid #e1e8ed;
+            border-radius: 16px;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255,255,255,0.8);
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 36px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .seat-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 12px;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            padding: 30px;
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .seat {
+            width: 70px;
+            height: 70px;
+            border: 2px solid #e1e8ed;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .seat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .seat:hover::before {
+            opacity: 1;
+        }
+
+        .seat.available {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border-color: #2f855a;
+            color: white;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .seat.vip {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            border-color: #c05621;
+            color: white;
+            box-shadow: 0 4px 15px rgba(237, 137, 54, 0.4);
+            position: relative;
+        }
+
+        .seat.vip::after {
+            content: '👑';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 12px;
+        }
+
+        .seat.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            z-index: 10;
+        }
+
+        .seat:hover {
+            transform: scale(1.05);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(247, 250, 252, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .legend-seat {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .game-area {
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 30px 0;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .tic-tac-toe {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .tic-cell {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .speed-typing {
+            text-align: left;
+        }
+
+        .typing-text {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            line-height: 1.6;
+        }
+
+        .typing-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: monospace;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: #f39c12;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti-burst {
+            animation: confetti-burst 0.6s ease-out forwards;
+        }
+
+        .confetti-fall {
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        .confetti-spin {
+            animation: confetti-spin 2s linear infinite;
+        }
+
+        @keyframes confetti-burst {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes confetti-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .party-text {
+            animation: party-bounce 0.6s ease-in-out infinite alternate;
+        }
+
+        @keyframes party-bounce {
+            0% { transform: scale(1) rotate(-2deg); }
+            100% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        .message {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .banana-game {
+            text-align: center;
+        }
+
+        .banana {
+            font-size: 60px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .banana:hover {
+            transform: scale(1.1);
+        }
+
+        .jumbled-word {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+            letter-spacing: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Form -->
+        <div class="login-form" id="loginForm">
+            <h1>🎪 Welcome to SeatCraft</h1>
+            <p class="subtitle">Your premium seat booking experience</p>
+            <div class="form-group">
+                <label for="name">👤 Full Name</label>
+                <input type="text" id="name" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">📱 Phone Number</label>
+                <input type="tel" id="phone" placeholder="Enter your phone number" required>
+            </div>
+            <button onclick="login()">
+                <span>🚀 Start Booking Journey</span>
+            </button>
+        </div>
+
+        <!-- Seat Selection -->
+        <div class="seat-selection" id="seatSelection">
+            <h1>Select Your Seat</h1>
+            <p>Welcome back, <span id="userName" style="color: #667eea; font-weight: 600;"></span>!</p>
+            <p class="subtitle">🎯 Try your luck and book your seat</p>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-seat" style="background: linear-gradient(135deg, #48bb78, #38a169);"></div>
+                    <span>Regular Seats</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-seat" style="background: linear-gradient(135deg, #ed8936, #dd6b20);"></div>
+                    <span>VIP Experience</span>
+                </div>
+            </div>
+
+            <div class="seat-grid" id="seatGrid"></div>
+            
+            <button onclick="confirmBooking()" id="confirmBtn" style="display: none;">
+                <span>✨ Confirm Booking</span>
+            </button>
+        </div>
+
+        <!-- Game Container -->
+        <div class="game-container" id="gameContainer">
+            <h2>OOPS! The seat is booked.</h2>
+            <p>Win the game to claim this seat!</p>
+            <div id="gameArea"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = '';
+        let selectedSeat = null;
+        let bookedSeats = new Set();
+        let gameWon = false;
+        let currentGame = '';
+
+        // Initialize booked seats (70% randomly booked)
+        function initializeBookedSeats() {
+            const totalSeats = 56;
+            const bookedCount = Math.floor(totalSeats * 0.7);
+            const seatNumbers = Array.from({length: totalSeats}, (_, i) => i + 1);
+            
+            // Shuffle and pick random seats to be booked
+            for (let i = seatNumbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [seatNumbers[i], seatNumbers[j]] = [seatNumbers[j], seatNumbers[i]];
+            }
+            
+            bookedSeats = new Set(seatNumbers.slice(0, bookedCount));
+        }
+
+        function login() {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            
+            if (name && phone) {
+                currentUser = name;
+                document.getElementById('userName').textContent = name;
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('seatSelection').style.display = 'block';
+                initializeBookedSeats();
+                generateSeats();
+            } else {
+                alert('Please fill in all fields');
+            }
+        }
+
+        function generateSeats() {
+            const seatGrid = document.getElementById('seatGrid');
+            seatGrid.innerHTML = '';
+            
+            for (let i = 1; i <= 56; i++) {
+                const seat = document.createElement('div');
+                seat.className = 'seat';
+                seat.textContent = i;
+                seat.onclick = () => selectSeat(i);
+                
+                // First 16 seats are VIP
+                if (i <= 16) {
+                    seat.classList.add('vip');
+                } else {
+                    seat.classList.add('available');
+                }
+                
+                seatGrid.appendChild(seat);
+            }
+        }
+
+        function selectSeat(seatNumber) {
+            // Always allow selection and show confirm button
+            document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
+            document.querySelectorAll('.seat')[seatNumber - 1].classList.add('selected');
+            selectedSeat = seatNumber;
+            document.getElementById('confirmBtn').style.display = 'block';
+        }
+
+        function confirmBooking() {
+            if (bookedSeats.has(selectedSeat)) {
+                // Seat is actually booked, show message and redirect to game
+                showBookedMessage();
+            } else {
+                // Seat is available, complete booking
+                showMessage(`Congratulations! You've successfully booked seat ${selectedSeat}!`, 'success');
+                createConfetti();
+            }
+        }
+
+        function showBookedMessage() {
+            const seatSelection = document.getElementById('seatSelection');
+            seatSelection.innerHTML = `
+                <h1>🎪 SeatCraft</h1>
+                <div class="message error" style="font-size: 1.8em; padding: 40px; border-radius: 20px; background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; border: none; margin: 30px 0;">
+                    😅 Ayeee its aalready booked!
+                </div>
+                <p style="margin: 20px 0; font-size: 1.2em; color: #2c3e50;">But don't worry - win the challenge and claim your seat! 🏆</p>
+                <button onclick="startRandomGame()" style="background: linear-gradient(135deg, #ff6b6b, #ee5a52); margin: 10px;">
+                    <span>🎮 Accept Challenge</span>
+                </button>
+                <button onclick="backToSeats()" style="background: linear-gradient(135deg, #6c757d, #495057); margin: 10px;">
+                    <span>🔄 Try Another Seat</span>
+                </button>
+            `;
+        }
+
+        function backToSeats() {
+            document.getElementById('seatSelection').innerHTML = `
+                <h1>Select Your Seat</h1>
+                <p>Welcome back, <span id="userName" style="color: #667eea; font-weight: 600;">${currentUser}</span>!</p>
+                <p class="subtitle">🎯 Try your luck and book your seat</p>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-seat" style="background: linear-gradient(135deg, #48bb78, #38a169);"></div>
+                        <span>Regular Seats</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-seat" style="background: linear-gradient(135deg, #ed8936, #dd6b20);"></div>
+                        <span>VIP Experience</span>
+                    </div>
+                </div>
+
+                <div class="seat-grid" id="seatGrid"></div>
+                
+                <button onclick="confirmBooking()" id="confirmBtn" style="display: none;">
+                    <span>✨ Confirm Booking</span>
+                </button>
+            `;
+            generateSeats();
+        }
+
+        function startRandomGame() {
+            const games = ['ticTacToe', 'bananaGame', 'speedTyping', 'jumbledWords'];
+            currentGame = games[Math.floor(Math.random() * games.length)];
+            
+            document.getElementById('seatSelection').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            
+            switch(currentGame) {
+                case 'ticTacToe':
+                    initTicTacToe();
+                    break;
+                case 'bananaGame':
+                    initBananaGame();
+                    break;
+                case 'speedTyping':
+                    initSpeedTyping();
+                    break;
+                case 'jumbledWords':
+                    initJumbledWords();
+                    break;
+            }
+        }
+
+        function initTicTacToe() {
+            document.getElementById('gameArea').innerHTML = `
+                <h3>Tic Tac Toe - You are X</h3>
+                <div class="tic-tac-toe" id="ticTacToe"></div>
+                <button onclick="resetGame()">Back to Seats</button>
+            `;
+            
+            const board = document.getElementById('ticTacToe');
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'tic-cell';
+                cell.onclick = () => makeMove(i);
+                board.appendChild(cell);
+            }
+        }
+
+        let ticBoard = Array(9).fill('');
+        function makeMove(index) {
+            if (ticBoard[index] === '') {
+                ticBoard[index] = 'X';
+                document.querySelectorAll('.tic-cell')[index].textContent = 'X';
+                
+                if (checkWin('X')) {
+                    gameWin();
+                    return;
+                }
+                
+                // AI move
+                setTimeout(() => {
+                    const aiMove = getAIMove();
+                    if (aiMove !== -1) {
+                        ticBoard[aiMove] = 'O';
+                        document.querySelectorAll('.tic-cell')[aiMove].textContent = 'O';
+                        
+                        if (checkWin('O')) {
+                            gameLose();
+                        }
+                    }
+                }, 500);
+            }
+        }
+
+        function getAIMove() {
+            const empty = ticBoard.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+            return empty.length > 0 ? empty[Math.floor(Math.random() * empty.length)] : -1;
+        }
+
+        function checkWin(player) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return wins.some(combo => combo.every(i => ticBoard[i] === player));
+        }
+
+        function initBananaGame() {
+            let clicks = 0;
+            let timeLeft = 10;
+            
+            document.getElementById('gameArea').innerHTML = `
+                <h3>Banana Tap Game - Tap 20 bananas in 10 seconds!</h3>
+                <div class="stats">
+                    <div class="stat">Clicks: <span id="clickCount">0</span></div>
+                    <div class="stat">Time: <span id="timeLeft">10</span>s</div>
+                </div>
+                <div class="banana-game" id="bananaField"></div>
+                <button onclick="resetGame()">Back to Seats</button>
+            `;
+            
+            const field = document.getElementById('bananaField');
+            
+            function spawnBanana() {
+                const banana = document.createElement('div');
+                banana.className = 'banana';
+                banana.innerHTML = '🍌';
+                banana.style.position = 'absolute';
+                banana.style.left = Math.random() * 80 + '%';
+                banana.style.top = Math.random() * 60 + 30 + '%';
+                banana.onclick = () => {
+                    clicks++;
+                    document.getElementById('clickCount').textContent = clicks;
+                    banana.remove();
+                    
+                    if (clicks >= 20) {
+                        gameWin();
+                        return;
+                    }
+                    
+                    setTimeout(spawnBanana, 200);
+                };
+                
+                field.appendChild(banana);
+                
+                setTimeout(() => {
+                    if (banana.parentNode) banana.remove();
+                    if (timeLeft > 0 && clicks < 20) spawnBanana();
+                }, 2000);
+            }
+            
+            spawnBanana();
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timeLeft').textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    if (clicks < 20) {
+                        gameLose();
+                    }
+                }
+            }, 1000);
+        }
+
+        function initSpeedTyping() {
+            const sentences = [
+                "The quick brown fox jumps over the lazy dog.",
+                "Pack my box with five dozen liquor jugs.",
+                "How vexingly quick daft zebras jump!",
+                "Bright vixens jump; dozy fowl quack."
+            ];
+            
+            const sentence = sentences[Math.floor(Math.random() * sentences.length)];
+            let startTime = null;
+            
+            document.getElementById('gameArea').innerHTML = `
+                <h3>Speed Typing - Type the sentence correctly!</h3>
+                <div class="speed-typing">
+                    <div class="typing-text">${sentence}</div>
+                    <input type="text" class="typing-input" id="typingInput" placeholder="Start typing here...">
+                    <div class="stats">
+                        <div class="stat">WPM: <span id="wpm">0</span></div>
+                        <div class="stat">Accuracy: <span id="accuracy">100</span>%</div>
+                    </div>
+                </div>
+                <button onclick="resetGame()">Back to Seats</button>
+            `;
+            
+            const input = document.getElementById('typingInput');
+            input.addEventListener('input', (e) => {
+                if (!startTime) startTime = Date.now();
+                
+                const typed = e.target.value;
+                const timeElapsed = (Date.now() - startTime) / 1000 / 60; // minutes
+                const wordsTyped = typed.split(' ').length;
+                const wpm = Math.round(wordsTyped / timeElapsed) || 0;
+                
+                let correct = 0;
+                for (let i = 0; i < Math.min(typed.length, sentence.length); i++) {
+                    if (typed[i] === sentence[i]) correct++;
+                }
+                const accuracy = Math.round((correct / typed.length) * 100) || 100;
+                
+                document.getElementById('wpm').textContent = wpm;
+                document.getElementById('accuracy').textContent = accuracy;
+                
+                if (typed === sentence) {
+                    if (wpm >= 30 && accuracy >= 90) {
+                        gameWin();
+                    } else {
+                        gameLose();
+                    }
+                }
+            });
+        }
+
+        function initJumbledWords() {
+            const words = ['ELEPHANT', 'COMPUTER', 'RAINBOW', 'MOUNTAIN', 'KEYBOARD', 'BUTTERFLY'];
+            const word = words[Math.floor(Math.random() * words.length)];
+            const jumbled = word.split('').sort(() => Math.random() - 0.5).join('');
+            
+            document.getElementById('gameArea').innerHTML = `
+                <h3>Jumbled Words - Unscramble the word!</h3>
+                <div class="jumbled-word">${jumbled}</div>
+                <input type="text" id="wordInput" placeholder="Enter the correct word" style="padding: 15px; font-size: 18px; margin: 20px 0;">
+                <br>
+                <button onclick="checkWord('${word}')">Submit Answer</button>
+                <button onclick="resetGame()">Back to Seats</button>
+            `;
+        }
+
+        function checkWord(correctWord) {
+            const userAnswer = document.getElementById('wordInput').value.toUpperCase();
+            if (userAnswer === correctWord) {
+                gameWin();
+            } else {
+                gameLose();
+            }
+        }
+
+        function gameWin() {
+            showMessage(`Congratulations! You won and got seat ${selectedSeat}!`, 'success');
+            createConfetti();
+            bookedSeats.delete(selectedSeat); // Remove from booked seats
+            setTimeout(() => {
+                document.getElementById('gameContainer').style.display = 'none';
+                document.getElementById('seatSelection').style.display = 'block';
+                backToSeats(); // Use backToSeats to properly restore the interface
+            }, 3000);
+        }
+
+        function gameLose() {
+            showMessage('BOO! You lost the game. Try another seat!', 'error');
+            setTimeout(() => {
+                document.getElementById('gameContainer').style.display = 'none';
+                document.getElementById('seatSelection').style.display = 'block';
+                backToSeats(); // Use backToSeats to properly restore the interface
+            }, 2000);
+        }
+
+        function resetGame() {
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('seatSelection').style.display = 'block';
+            backToSeats(); // Use backToSeats to properly restore the interface
+        }
+
+        function showMessage(text, type) {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `<div class="message ${type}">${text}</div>`;
+        }
+
+        function createConfetti() {
+            const colors = ['#f39c12', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71', '#e67e22', '#f1c40f', '#e91e63'];
+            const shapes = ['circle', 'square', 'triangle'];
+            
+            // Create burst effect from center
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti confetti-burst';
+                
+                // Random shape
+                const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                
+                if (shape === 'circle') {
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.width = Math.random() * 8 + 6 + 'px';
+                    confetti.style.height = confetti.style.width;
+                } else if (shape === 'triangle') {
+                    confetti.style.width = '0';
+                    confetti.style.height = '0';
+                    confetti.style.background = 'transparent';
+                    confetti.style.borderLeft = '6px solid transparent';
+                    confetti.style.borderRight = '6px solid transparent';
+                    confetti.style.borderBottom = '10px solid ' + colors[Math.floor(Math.random() * colors.length)];
+                } else {
+                    confetti.style.width = Math.random() * 6 + 4 + 'px';
+                    confetti.style.height = confetti.style.width;
+                }
+                
+                // Start from center and burst outward
+                confetti.style.left = '50%';
+                confetti.style.top = '50%';
+                confetti.style.transform = 'translate(-50%, -50%)';
+                
+                // Random burst direction
+                const angle = (Math.PI * 2 * i) / 100;
+                const velocity = Math.random() * 300 + 200;
+                const finalX = Math.cos(angle) * velocity;
+                const finalY = Math.sin(angle) * velocity;
+                
+                document.body.appendChild(confetti);
+                
+                // Animate burst
+                setTimeout(() => {
+                    confetti.style.transform = `translate(${finalX}px, ${finalY}px) rotate(${Math.random() * 720}deg)`;
+                    confetti.classList.remove('confetti-burst');
+                    confetti.classList.add('confetti-fall', 'confetti-spin');
+                    
+                    // Add party physics
+                    confetti.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                }, 50);
+                
+                // After burst, let them fall
+                setTimeout(() => {
+                    confetti.style.transition = 'all 3s linear';
+                    confetti.style.transform = `translate(${finalX + (Math.random() - 0.5) * 200}px, 100vh) rotate(${Math.random() * 1440}deg)`;
+                    confetti.style.opacity = '0';
+                }, 700);
+                
+                setTimeout(() => confetti.remove(), 4000);
+            }
+            
+            // Add celebration text animation
+            const gameArea = document.getElementById('gameArea');
+            if (gameArea) {
+                const currentContent = gameArea.innerHTML;
+                gameArea.innerHTML = `<div class="party-text">${currentContent}</div>`;
+                
+                // Add some party emojis floating around
+                setTimeout(() => {
+                    for (let i = 0; i < 20; i++) {
+                        const emoji = document.createElement('div');
+                        emoji.innerHTML = ['🎉', '🎊', '🥳', '🎈', '🏆', '⭐'][Math.floor(Math.random() * 6)];
+                        emoji.style.position = 'fixed';
+                        emoji.style.fontSize = '30px';
+                        emoji.style.left = Math.random() * 100 + 'vw';
+                        emoji.style.top = '-50px';
+                        emoji.style.zIndex = '1001';
+                        emoji.style.animation = `confetti-fall ${Math.random() * 2 + 3}s linear forwards`;
+                        emoji.style.animationDelay = Math.random() * 2 + 's';
+                        document.body.appendChild(emoji);
+                        
+                        setTimeout(() => emoji.remove(), 6000);
+                    }
+                }, 500);
+            }
+        }
+
+        // Initialize the app
+        initializeBookedSeats();
+    </script>
+</body>
+</html>
